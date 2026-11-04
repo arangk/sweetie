@@ -9,12 +9,12 @@ function imageNode(item) {
   if (item.src) { const img = document.createElement('img'); img.src = item.src; img.alt = item.caption; img.loading = 'lazy'; img.decoding = 'async'; return img; }
   const art = document.createElement('span'); art.className = `art art-${item.art}`; art.role = 'img'; art.setAttribute('aria-label', item.caption); return art;
 }
-if (config.coverImage) {
- const art = document.querySelector('.cover-art'); art.style.backgroundImage = `url(${JSON.stringify(config.coverImage)})`; art.style.backgroundSize = 'contain'; art.style.backgroundPosition = 'center';
-}
+if (config.coverImage) document.querySelector('.cover-illustration').src = config.coverImage;
+document.querySelector('.card-venue').textContent = config.venue;
+document.querySelector('.card-couple').textContent = config.names.join(' 그리고 ');
 const gallery = document.querySelector('.gallery-stack');
 config.gallery.forEach((item, index) => {
- const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); const caption = document.createElement('span'); caption.className = 'photo-caption'; caption.textContent = `${String(index + 1).padStart(2, '0')} / ${item.caption}`; button.append(caption); button.addEventListener('click', () => openImage(index)); gallery.append(button);
+ const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); button.addEventListener('click', () => openImage(index)); gallery.append(button);
 });
 const dialog = document.querySelector('.lightbox');
 let current = 0;
@@ -33,7 +33,7 @@ let touchX = null;
 dialog.addEventListener('touchstart', e => touchX = e.changedTouches[0].clientX, {passive:true});
 dialog.addEventListener('touchend', e => { if (touchX !== null) { const delta = e.changedTouches[0].clientX - touchX; if (Math.abs(delta) > 45) step(delta < 0 ? 1 : -1); touchX = null; } }, {passive:true});
 const calendar = document.querySelector('.calendar');
-['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(day => {const el = document.createElement('span'); el.className = 'weekday'; el.textContent = day; calendar.append(el);});
+['일','월','화','수','목','금','토'].forEach(day => {const el = document.createElement('span'); el.className = 'weekday'; el.textContent = day; calendar.append(el);});
 calendar.append(document.createElement('span'));
 for(let day = 1; day <= 28; day++) { const el = document.createElement('span'); el.textContent = day; if(day === 27) {el.className = 'wedding-date'; el.setAttribute('aria-label','27일 결혼식');} calendar.append(el); }
 const remaining = Math.ceil((new Date(config.date) - new Date()) / 86400000);
@@ -44,7 +44,7 @@ document.querySelector('.rsvp').addEventListener('click', () => {
 });
 if ('IntersectionObserver' in window) {
  document.documentElement.classList.add('js-ready');
- const observer = new IntersectionObserver(entries => entries.forEach(entry => { if(entry.isIntersecting) {entry.target.classList.add('visible'); observer.unobserve(entry.target);} }), {threshold:.1});
+ const observer = new IntersectionObserver(entries => entries.forEach(entry => { entry.target.classList.toggle('visible', entry.isIntersecting); }), {threshold:.1});
  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 const locationInfo = config.location;
@@ -75,5 +75,11 @@ for (const item of locationInfo.transit) {
  const row = document.createElement('div'); const heading = document.createElement('h3'); const text = document.createElement('p'); heading.textContent = item.title; text.textContent = item.text; row.append(heading, text); document.querySelector('.transport').append(row);
 }
 
-const activeVersion = document.body.classList.contains('font-orbit') ? 'orbit' : 'classic';
-document.querySelector(`[data-version="${activeVersion}"]`)?.setAttribute('aria-current', 'page');
+for (const [side, accounts] of Object.entries(config.accounts)) {
+ const list = document.querySelector(`[data-side="${side}"]`);
+ const notice = document.createElement('p'); notice.className = 'account-example'; notice.textContent = '안내용 가상 계좌입니다. 실제 송금하지 마세요.'; list.append(notice);
+ for (const account of accounts) {
+  const row = document.createElement('p'); row.textContent = `${account.bank} ${account.number}`;
+  const holder = document.createElement('p'); holder.textContent = `예금주 ${account.holder}`; list.append(row, holder);
+ }
+}

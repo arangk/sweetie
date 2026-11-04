@@ -4,6 +4,10 @@ window.invitation = {
   venue: '서울, 어느 따뜻한 공간',
   address: '예식 장소와 주소를 입력해 주세요',
   greeting: '서로의 계절이 포개어져,\n더 따뜻한 시간이 시작됩니다.\n그 소중한 첫날에\n여러분을 초대합니다.',
+  accounts: {
+    groom: [{ bank: '예시은행', number: '000-0000-0000', holder: '김서준' }],
+    bride: [{ bank: '예시은행', number: '000-0000-0001', holder: '이지우' }]
+  },
   rsvpUrl: '',
   location: {
     // 실제 예식장 정보가 확정되면 true로 변경합니다.
