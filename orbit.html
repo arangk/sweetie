@@ -17,13 +17,16 @@
 <h1 id="cover-title">Happy<br><span>Wedding Day</span></h1>
 <p class="cover-sub">소중한 당신과 함께하고 싶은 날</p>
 <div class="envelope-stage">
+<div class="envelope-scene" data-state="closed">
 <button class="envelope" type="button" aria-label="봉투에서 초대장 꺼내기" aria-expanded="false" aria-controls="attendance-dialog">
 <span class="envelope-back" aria-hidden="true"></span>
 <span class="envelope-flap" aria-hidden="true"></span>
-<span class="invitation-sheet"><img class="cover-illustration" src="assets/cover-illustration.webp" alt="봉투 안에 든 두 사람의 수채화 초대장"></span>
+
 <svg class="envelope-front" viewBox="0 0 400 260" aria-hidden="true"><defs><filter id="paper-grain"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".09"/></feComponentTransfer></filter></defs><path d="M0 0L200 128 400 0V260H0Z" fill="#e5d9cf"/><path d="M0 0L205 150 0 260Z" fill="#eee4da"/><path d="M400 0L195 150 400 260Z" fill="#e9dfd5"/><path d="M0 260L200 110 400 260Z" fill="#f1e8df"/><path d="M0 0H400V260H0Z" filter="url(#paper-grain)" fill="#8d7668"/></svg>
-<span class="envelope-seal" aria-hidden="true">초대</span>
+<span class="envelope-seal" aria-hidden="true"><span>초대</span></span>
 </button>
+<button class="invitation-sheet" type="button" aria-label="일러스트 카드로 참석 안내 열기" aria-controls="attendance-dialog"><img class="cover-illustration" src="assets/cover-illustration.webp" alt="두 사람의 수채화 초대장"></button>
+</div>
 </div>
 <div class="cover-footer"><p class="couple"></p><span>2027년 2월 27일 토요일 · 오후 12시 30분</span><a href="#invitation" class="scroll-cue" aria-label="초대글로 이동">↓</a></div>
 </section>

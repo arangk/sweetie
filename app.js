@@ -5,17 +5,27 @@ document.querySelector('.venue-name').textContent = config.venue;
 document.querySelector('.address').textContent = config.address;
 const envelope = document.querySelector('.envelope');
 const attendanceDialog = document.querySelector('.attendance-dialog');
-let opening = false;
-envelope.addEventListener('click', () => {
- if (opening) return;
- const isOpen = envelope.getAttribute('aria-expanded') === 'true';
- if (isOpen) { attendanceDialog.showModal(); document.body.classList.add('modal-open'); return; }
- opening = true; envelope.setAttribute('aria-expanded', 'true');
- const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1350;
- window.setTimeout(() => { opening = false; attendanceDialog.showModal(); document.body.classList.add('modal-open'); }, delay);
+const scene = document.querySelector('.envelope-scene');
+const invitationSheet = document.querySelector('.invitation-sheet');
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cardTimer;
+function extractCard() {
+ if (['extracting','out','returning'].includes(scene.dataset.state)) return;
+ envelope.setAttribute('aria-expanded', 'true');
+ scene.dataset.state = 'extracting';
+ cardTimer = window.setTimeout(() => { scene.dataset.state = 'out'; invitationSheet.focus({preventScroll:true}); }, reducedMotion() ? 0 : 1200);
+}
+envelope.addEventListener('click', extractCard);
+invitationSheet.addEventListener('click', () => {
+ if (scene.dataset.state !== 'out') { extractCard(); return; }
+ attendanceDialog.showModal(); document.body.classList.add('modal-open');
 });
 document.querySelector('.close-attendance').addEventListener('click', () => attendanceDialog.close());
-attendanceDialog.addEventListener('close', () => { document.body.classList.remove('modal-open'); });
+attendanceDialog.addEventListener('close', () => {
+ document.body.classList.remove('modal-open');
+ scene.dataset.state = 'returning';
+ cardTimer = window.setTimeout(() => { scene.dataset.state = 'resting'; envelope.focus({preventScroll:true}); }, reducedMotion() ? 0 : 850);
+});
 document.querySelector('.attendance-names').textContent = config.names.join(' 그리고 ');
 document.querySelector('.attendance-venue').textContent = config.venue;
 function imageNode(item) {
@@ -91,6 +101,12 @@ for (const [side, accounts] of Object.entries(config.accounts)) {
  const list = document.querySelector(`[data-side="${side}"]`);
  for (const account of accounts) {
   const row = document.createElement('p'); row.textContent = `${account.bank} ${account.number}`;
-  const holder = document.createElement('p'); holder.textContent = `예금주 ${account.holder}`; list.append(row, holder);
+  const holder = document.createElement('p'); holder.textContent = `예금주 ${account.holder}`; const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'copy-account'; copy.textContent = '계좌 복사'; copy.setAttribute('aria-label', `${account.holder} 계좌번호 복사`);
+  const status = document.createElement('p'); status.className = 'account-copy-status'; status.setAttribute('role', 'status');
+  copy.addEventListener('click', async () => {
+   try { await navigator.clipboard.writeText(account.number); status.textContent = '계좌번호를 복사했습니다.'; }
+   catch { status.textContent = '계좌번호를 선택해서 복사해 주세요.'; }
+  });
+  list.append(row, holder, copy, status);
  }
 }
