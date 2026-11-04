@@ -3,15 +3,27 @@ document.querySelectorAll('.couple').forEach(el => el.textContent = config.names
 document.querySelector('.greeting').textContent = config.greeting;
 document.querySelector('.venue-name').textContent = config.venue;
 document.querySelector('.address').textContent = config.address;
-const card = document.querySelector('.flip-card');
-card.addEventListener('click', () => card.setAttribute('aria-pressed', String(card.getAttribute('aria-pressed') !== 'true')));
+const envelope = document.querySelector('.envelope');
+const attendanceDialog = document.querySelector('.attendance-dialog');
+let opening = false;
+envelope.addEventListener('click', () => {
+ if (opening) return;
+ const isOpen = envelope.getAttribute('aria-expanded') === 'true';
+ if (isOpen) { attendanceDialog.showModal(); document.body.classList.add('modal-open'); return; }
+ opening = true; envelope.setAttribute('aria-expanded', 'true');
+ const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1350;
+ window.setTimeout(() => { opening = false; attendanceDialog.showModal(); document.body.classList.add('modal-open'); }, delay);
+});
+document.querySelector('.close-attendance').addEventListener('click', () => attendanceDialog.close());
+attendanceDialog.addEventListener('close', () => { document.body.classList.remove('modal-open'); });
+document.querySelector('.attendance-names').textContent = config.names.join(' 그리고 ');
+document.querySelector('.attendance-venue').textContent = config.venue;
 function imageNode(item) {
   if (item.src) { const img = document.createElement('img'); img.src = item.src; img.alt = item.caption; img.loading = 'lazy'; img.decoding = 'async'; return img; }
   const art = document.createElement('span'); art.className = `art art-${item.art}`; art.role = 'img'; art.setAttribute('aria-label', item.caption); return art;
 }
 if (config.coverImage) document.querySelector('.cover-illustration').src = config.coverImage;
-document.querySelector('.card-venue').textContent = config.venue;
-document.querySelector('.card-couple').textContent = config.names.join(' 그리고 ');
+
 const gallery = document.querySelector('.gallery-stack');
 config.gallery.forEach((item, index) => {
  const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); button.addEventListener('click', () => openImage(index)); gallery.append(button);
@@ -77,7 +89,6 @@ for (const item of locationInfo.transit) {
 
 for (const [side, accounts] of Object.entries(config.accounts)) {
  const list = document.querySelector(`[data-side="${side}"]`);
- const notice = document.createElement('p'); notice.className = 'account-example'; notice.textContent = '안내용 가상 계좌입니다. 실제 송금하지 마세요.'; list.append(notice);
  for (const account of accounts) {
   const row = document.createElement('p'); row.textContent = `${account.bank} ${account.number}`;
   const holder = document.createElement('p'); holder.textContent = `예금주 ${account.holder}`; list.append(row, holder);
