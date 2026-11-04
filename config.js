@@ -19,10 +19,13 @@ window.invitation = {
     ]
   },
   // 실제 이미지 파일을 assets/에 넣고 경로를 지정하면 시안 이미지가 교체됩니다.
-  coverImage: '',
+  coverImage: 'assets/cover-illustration.webp',
   gallery: [
-    { src: '', art: 'portrait', caption: '너와 마주한 겨울' },
-    { src: '', art: 'kiss', caption: '작고 다정한 순간들' },
-    { src: '', art: 'station', caption: '같은 곳을 바라보며' }
+    { src: 'assets/photos/bridge.webp', caption: '너와 마주한 겨울' },
+    { src: 'assets/photos/rings.webp', caption: '우리의 작은 약속' },
+    { src: 'assets/photos/tram.webp', caption: '같은 방향으로' },
+    { src: 'assets/photos/cameras.webp', caption: '너를 담는 순간' },
+    { src: 'assets/photos/stop.webp', caption: '함께 기다리는 시간' },
+    { src: 'assets/photos/sunset.webp', caption: '오늘도, 내일도 너와' }
   ]
 };

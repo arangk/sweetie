@@ -6,15 +6,15 @@ document.querySelector('.address').textContent = config.address;
 const card = document.querySelector('.flip-card');
 card.addEventListener('click', () => card.setAttribute('aria-pressed', String(card.getAttribute('aria-pressed') !== 'true')));
 function imageNode(item) {
-  if (item.src) { const img = document.createElement('img'); img.src = item.src; img.alt = item.caption; img.loading = 'lazy'; return img; }
+  if (item.src) { const img = document.createElement('img'); img.src = item.src; img.alt = item.caption; img.loading = 'lazy'; img.decoding = 'async'; return img; }
   const art = document.createElement('span'); art.className = `art art-${item.art}`; art.role = 'img'; art.setAttribute('aria-label', item.caption); return art;
 }
 if (config.coverImage) {
- const art = document.querySelector('.cover-art'); art.style.backgroundImage = `url(${JSON.stringify(config.coverImage)})`; art.style.backgroundSize = 'cover'; art.style.backgroundPosition = 'center';
+ const art = document.querySelector('.cover-art'); art.style.backgroundImage = `url(${JSON.stringify(config.coverImage)})`; art.style.backgroundSize = 'contain'; art.style.backgroundPosition = 'center';
 }
 const gallery = document.querySelector('.gallery-stack');
 config.gallery.forEach((item, index) => {
- const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); button.addEventListener('click', () => openImage(index)); gallery.append(button);
+ const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); const caption = document.createElement('span'); caption.className = 'photo-caption'; caption.textContent = `${String(index + 1).padStart(2, '0')} / ${item.caption}`; button.append(caption); button.addEventListener('click', () => openImage(index)); gallery.append(button);
 });
 const dialog = document.querySelector('.lightbox');
 let current = 0;
@@ -74,3 +74,6 @@ for (const [name, url] of [['네이버 지도', locationInfo.naverUrl], ['카카
 for (const item of locationInfo.transit) {
  const row = document.createElement('div'); const heading = document.createElement('h3'); const text = document.createElement('p'); heading.textContent = item.title; text.textContent = item.text; row.append(heading, text); document.querySelector('.transport').append(row);
 }
+
+const activeVersion = document.body.classList.contains('font-orbit') ? 'orbit' : 'classic';
+document.querySelector(`[data-version="${activeVersion}"]`)?.setAttribute('aria-current', 'page');
