@@ -24,10 +24,13 @@
 | 오시는 길(지도·교통) | `location` — 정보를 다 넣은 뒤 `ready: true` |
 | 참석 여부 링크 | `rsvpUrl` — 구글폼 공유 링크 |
 
-**사진·일러스트 바꾸기**: 새 이미지를 `assets/` 폴더에 **같은 파일 이름으로 덮어쓰면** 코드를 안 고쳐도 됩니다.
-- `assets/cover-illustration.webp` : 표지 카드 (세로 2:3 비율 추천)
-- `assets/pencil-illustration.webp` : 인사말 아래 일러스트
-- `assets/photos/*.webp` : 갤러리 6장 (파일 이름은 config.js의 `gallery`에서 확인)
+**사진·일러스트 바꾸기**: 새 파일을 `assets/` 폴더에 넣고 `config.js`에서 아래 경로만 바꿉니다. HTML이나 CSS를 수정할 필요가 없습니다.
+- `coverImage`: 표지 카드 이미지. 하단 배경에도 같은 이미지를 사용합니다. 세로 2:3 비율 추천.
+- `portraitImage`: 초대 문구 뒤에 깔리는 일러스트.
+- `gallery`의 `src`: 갤러리 사진 경로. `caption`은 사진 설명입니다.
+- `location.mapImage`: 약도 이미지 경로.
+
+`.png`, `.jpg`, `.webp` 파일을 사용할 수 있습니다. 실제 파일명과 확장자를 정확히 적어 주세요. 빈 경로이거나 파일을 불러오지 못하면 해당 이미지 자리만 숨깁니다. 읽을 수 있는 갤러리 사진만 크게 보기와 넘기기에 포함됩니다.
 
 > 사진은 가로 1600px 이하로 줄이고, 위치 정보(EXIF)가 없는 파일을 쓰세요. 원본을 그대로 올리지 마세요.
 
@@ -42,7 +45,7 @@
 - 사이트 안의 참석 입력 화면은 **미리보기**이며 실제로 전달되지 않습니다.
 
 ## 폰트
-Orbit, Parisienne, 나눔손글씨(Nanum Pen Script, Daughter To Mom)는 `assets/fonts/`에 포함되어 있고, Noto Serif KR·Cormorant Garamond는 Google Fonts에서 불러옵니다. 각 폰트의 라이선스는 폰트 폴더의 `*-OFL.txt` 및 제공처 안내를 확인하세요.
+Orbit, Parisienne, 나눔손글씨(Daughter To Mom)는 `assets/fonts/`에 포함되어 있고, Noto Serif KR·Cormorant Garamond는 Google Fonts에서 불러옵니다. 각 폰트의 라이선스는 폰트 폴더의 `*-OFL.txt` 및 제공처 안내를 확인하세요.
 
 ## 사용 조건
 개인 청첩장 용도로 자유롭게 수정해 쓸 수 있습니다. 템플릿 자체의 재판매·유료 배포는 하지 마세요.

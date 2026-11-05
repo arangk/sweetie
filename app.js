@@ -1,7 +1,5 @@
-// Preload final fonts before typing. Keep a stable fallback on failure/slow networks.
-const fontsReady = Promise.all([
- ['orbit','16px Orbit'], ['script','16px Parisienne'], ['hand','25px "Daughter To Mom"']
-].map(async ([key,font]) => {
+// 폰트별로 준비를 확인합니다. 큰 손글씨 파일 때문에 첫 화면까지 기다리지 않습니다.
+async function prepareFont(key, font) {
  let timer;
  try {
   const faces = await Promise.race([
@@ -11,7 +9,12 @@ const fontsReady = Promise.all([
   if (!faces.length) document.documentElement.classList.add(`font-fallback-${key}`);
  } catch { document.documentElement.classList.add(`font-fallback-${key}`); }
  finally { clearTimeout(timer); }
-})).then(() => document.documentElement.classList.remove('fonts-loading'));
+}
+const orbitFontReady = prepareFont('orbit','16px Orbit');
+const scriptFontReady = prepareFont('script','16px Parisienne');
+const coverFontsReady = Promise.all([orbitFontReady, scriptFontReady]).then(() => document.documentElement.classList.remove('cover-font-loading'));
+const greetingFontReady = prepareFont('hand','25px "Daughter To Mom"').then(() => document.documentElement.classList.remove('greeting-font-loading'));
+Promise.all([coverFontsReady, greetingFontReady]).then(() => document.documentElement.classList.remove('fonts-loading'));
 const config = window.invitation;
 document.querySelectorAll('.couple').forEach(el => el.textContent = config.names.join('  ·  '));
 document.querySelector('.greeting').textContent = config.greeting;
@@ -42,7 +45,7 @@ function showFullCover() {
 }
 async function startCover() {
  clearTimeout(typeTimer); const run = ++coverRun;
- await fontsReady;
+ await coverFontsReady;
  if (run !== coverRun) return;
  if (motionPreference.matches) { showFullCover(); return; }
  cover.dataset.phase = 'typing';
@@ -84,7 +87,7 @@ function finishGreeting() { greetingRun++; clearTimeout(greetingTimer); greeting
 async function typeGreeting() {
  clearTimeout(greetingTimer);
  const run = ++greetingRun;
- await fontsReady;
+ await greetingFontReady;
  if (run !== greetingRun) return;
  if (motionPreference.matches) { finishGreeting(); return; }
  greetingText.textContent = '';
@@ -100,23 +103,68 @@ motionPreference.addEventListener('change', finishGreeting);
 
 document.querySelector('.attendance-names').textContent = config.names.join(' 그리고 ');
 document.querySelector('.attendance-venue').textContent = config.venue;
-function imageNode(item) {
-  if (item.src) { const img = document.createElement('img'); img.src = item.src; img.alt = item.caption; img.loading = 'lazy'; img.decoding = 'async'; return img; }
-  const art = document.createElement('span'); art.className = `art art-${item.art}`; art.role = 'img'; art.setAttribute('aria-label', item.caption); return art;
+// 파일 이름과 확장자는 설정값을 그대로 사용하고, 실패한 이미지 자리만 숨깁니다.
+function loadConfiguredImage(image, path, onLoad, onError) {
+ const source = typeof path === 'string' ? path.trim() : '';
+ image.hidden = true;
+ if (!source) { onError(); return; }
+ image.decoding = 'async';
+ image.onload = () => {
+  if (!image.naturalWidth) { onError(); return; }
+  image.hidden = false;
+  onLoad(source);
+ };
+ image.onerror = () => { image.hidden = true; onError(); };
+ image.src = source;
 }
-if (config.coverImage) document.querySelector('.cover-illustration').src = config.coverImage;
+const coverStage = document.querySelector('.cover-card-stage');
+const footerArt = document.querySelector('.landscape-art');
+loadConfiguredImage(document.querySelector('.cover-illustration'), config.coverImage, source => {
+ coverStage.hidden = false;
+ footerArt.style.backgroundImage = `url(${JSON.stringify(source)})`;
+ footerArt.hidden = false;
+}, () => { coverStage.hidden = true; footerArt.hidden = true; });
+const invitationSection = document.querySelector('#invitation');
+invitationSection.classList.add('no-portrait');
+const portrait = document.querySelector('.invitation-art');
+portrait.loading = 'eager';
+loadConfiguredImage(portrait, config.portraitImage, () => invitationSection.classList.remove('no-portrait'), () => invitationSection.classList.add('no-portrait'));
 
 const gallery = document.querySelector('.gallery-stack');
-config.gallery.forEach((item, index) => {
- const button = document.createElement('button'); button.className = 'gallery-card'; button.style.setProperty('--photo-order', index); button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); button.addEventListener('click', () => openImage(index)); gallery.append(button);
+const gallerySection = document.querySelector('.gallery-section');
+const galleryEntries = [];
+let galleryItems = [];
+function updateGallery() {
+ galleryItems = galleryEntries.filter(item => item.loaded);
+ gallery.hidden = galleryItems.length === 0;
+ gallerySection.classList.toggle('no-images', galleryItems.length === 0);
+ galleryItems.forEach((item,index) => item.button.style.setProperty('--photo-order', index));
+}
+updateGallery();
+(Array.isArray(config.gallery) ? config.gallery : []).forEach(item => {
+ if (!item || typeof item.src !== 'string' || !item.src.trim()) return;
+ const entry = {src:item.src.trim(), caption:item.caption || '갤러리 사진', loaded:false};
+ const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.hidden = true;
+ entry.button = button; galleryEntries.push(entry);
+ button.setAttribute('aria-label', `${entry.caption} 확대 보기`);
+ const image = document.createElement('img'); image.alt = entry.caption;
+ button.append(image); gallery.append(button);
+ button.addEventListener('click', () => { const index = galleryItems.indexOf(entry); if (index >= 0) openImage(index); });
+ loadConfiguredImage(image, entry.src, () => { entry.loaded = true; button.hidden = false; updateGallery(); }, () => { entry.loaded = false; button.remove(); updateGallery(); });
 });
 const dialog = document.querySelector('.lightbox');
 let current = 0;
 function renderImage() {
- const item = config.gallery[current]; document.querySelector('.lightbox-image').replaceChildren(imageNode(item)); document.querySelector('.image-count').textContent = `${String(current + 1).padStart(2, '0')} / ${String(config.gallery.length).padStart(2, '0')}`; document.querySelector('.image-caption').textContent = item.caption;
+ const item = galleryItems[current];
+ if (!item) return;
+ const container = document.querySelector('.lightbox-image');
+ const image = document.createElement('img'); image.alt = item.caption; container.replaceChildren(image);
+ loadConfiguredImage(image, item.src, () => {}, () => { container.textContent = '이미지를 불러오지 못했습니다.'; });
+ document.querySelector('.image-count').textContent = `${String(current + 1).padStart(2, '0')} / ${String(galleryItems.length).padStart(2, '0')}`;
+ document.querySelector('.image-caption').textContent = item.caption;
 }
-function openImage(index) { current = index; renderImage(); dialog.showModal(); document.body.classList.add('modal-open'); }
-function step(delta) { current = (current + delta + config.gallery.length) % config.gallery.length; renderImage(); }
+function openImage(index) { if (!galleryItems.length) return; current = index; renderImage(); dialog.showModal(); document.body.classList.add('modal-open'); }
+function step(delta) { if (!galleryItems.length) return; current = (current + delta + galleryItems.length) % galleryItems.length; renderImage(); }
 document.querySelector('.close-lightbox').addEventListener('click', () => dialog.close());
 dialog.addEventListener('close', () => document.body.classList.remove('modal-open'));
 document.querySelector('.previous').addEventListener('click', () => step(-1));
@@ -191,9 +239,9 @@ copyAddress.addEventListener('click', async () => {
  try { await navigator.clipboard.writeText(config.address); locationStatus.textContent = '주소를 복사했습니다.'; }
  catch { locationStatus.textContent = '주소를 길게 누르거나 선택해서 복사해 주세요.'; }
 });
-if (locationInfo.mapImage) {
- const image = document.createElement('img'); image.src = locationInfo.mapImage; image.alt = `${config.venue} 오시는 길 약도`; image.loading = 'lazy'; document.querySelector('.map-frame').replaceChildren(image);
-}
+const mapFrame = document.querySelector('.map-frame');
+const mapImage = document.createElement('img'); mapImage.alt = `${config.venue} 오시는 길 약도`;
+loadConfiguredImage(mapImage, locationInfo.mapImage, () => { mapFrame.replaceChildren(mapImage); mapFrame.hidden = false; }, () => { mapFrame.hidden = true; });
 const mapLinks = document.querySelector('.map-links');
 for (const [name, url] of [['네이버 지도', locationInfo.naverUrl], ['카카오맵', locationInfo.kakaoUrl], ['티맵', locationInfo.tmapUrl]]) {
  let valid = false;
