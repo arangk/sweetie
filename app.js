@@ -26,7 +26,7 @@ function showFullCover() {
 function startCover() {
  clearTimeout(typeTimer); const run = ++coverRun;
  if (motionPreference.matches) { showFullCover(); return; }
- cover.dataset.phase = 'kicker';
+ cover.dataset.phase = 'typing';
  typeLines.forEach(line => { line.textContent = ''; line.classList.remove('typing'); });
  let lineIndex = 0, character = 0;
  function nextCharacter() {
@@ -40,7 +40,7 @@ function startCover() {
    else { cover.dataset.phase = 'details'; typeTimer = setTimeout(() => { if (run === coverRun) cover.dataset.phase = 'complete'; }, 1300); }
   }
  }
- typeTimer = setTimeout(() => { if(run === coverRun) { cover.dataset.phase = 'typing'; nextCharacter(); } }, 650);
+ typeTimer = setTimeout(() => { if(run === coverRun) { cover.dataset.phase = 'typing'; nextCharacter(); } }, 120);
 }
 if ('IntersectionObserver' in window) {
  document.documentElement.classList.add('cover-motion');
@@ -85,7 +85,7 @@ const calendar = document.querySelector('.calendar');
 calendar.append(document.createElement('span'));
 for(let day = 1; day <= 28; day++) { const el = document.createElement('span'); el.textContent = day; if(day === 27) {el.className = 'wedding-date'; el.setAttribute('aria-label','27일 결혼식');} calendar.append(el); }
 const remaining = Math.ceil((new Date(config.date) - new Date()) / 86400000);
-document.querySelector('.countdown').textContent = remaining > 0 ? `우리의 첫 번째 계절까지 ${remaining}일` : remaining === 0 ? '오늘, 우리의 새로운 이야기가 시작됩니다.' : '함께해 주신 마음, 감사합니다.';
+document.querySelector('.countdown').textContent = remaining > 0 ? `결혼식까지 ${remaining}일 남았습니다` : remaining === 0 ? '오늘, 우리의 새로운 이야기가 시작됩니다.' : '함께해 주신 마음, 감사합니다.';
 document.querySelector('.rsvp').addEventListener('click', () => {
  if(config.rsvpUrl && /^https?:\/\//.test(config.rsvpUrl)) window.open(config.rsvpUrl, '_blank', 'noopener,noreferrer');
  else document.querySelector('.rsvp-status').textContent = '참석 알림 링크는 준비 중입니다.';
@@ -141,3 +141,9 @@ for (const [side, accounts] of Object.entries(config.accounts)) {
   list.append(row, holder, copy, status);
  }
 }
+
+// Keep native vertical scrolling and the gallery viewer, without page pinch zoom.
+for (const eventName of ['gesturestart', 'gesturechange']) {
+ document.addEventListener(eventName, event => event.preventDefault(), {passive:false});
+}
+document.addEventListener('touchstart', event => { if (event.touches.length > 1) event.preventDefault(); }, {passive:false});
