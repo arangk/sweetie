@@ -62,7 +62,7 @@ if (config.coverImage) document.querySelector('.cover-illustration').src = confi
 
 const gallery = document.querySelector('.gallery-stack');
 config.gallery.forEach((item, index) => {
- const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); button.addEventListener('click', () => openImage(index)); gallery.append(button);
+ const button = document.createElement('button'); button.className = 'gallery-card'; button.style.setProperty('--photo-order', index); button.type = 'button'; button.setAttribute('aria-label', `${item.caption} 확대 보기`); button.append(imageNode(item)); button.addEventListener('click', () => openImage(index)); gallery.append(button);
 });
 const dialog = document.querySelector('.lightbox');
 let current = 0;
