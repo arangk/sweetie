@@ -7,7 +7,10 @@ const attendanceDialog = document.querySelector('.attendance-dialog');
 const illustrationCard = document.querySelector('.illustration-card');
 function openAttendance() { showAttendanceIntro(); attendanceDialog.showModal(); document.body.classList.add('modal-open'); }
 illustrationCard.addEventListener('click', openAttendance);
-document.querySelectorAll('.open-attendance').forEach(button => button.addEventListener('click', openAttendance));
+document.querySelectorAll('.open-attendance').forEach(button => button.addEventListener('click', () => {
+ showAttendanceForm(); attendanceDialog.showModal(); document.body.classList.add('modal-open');
+ document.querySelector('.back-to-invitation').focus({preventScroll:true});
+}));
 document.querySelector('.close-attendance').addEventListener('click', () => attendanceDialog.close());
 attendanceDialog.addEventListener('close', () => document.body.classList.remove('modal-open'));
 
@@ -93,14 +96,15 @@ function showAttendanceIntro() {
  attendanceDialog.setAttribute('aria-labelledby','attendance-title');
  attendanceDialog.scrollTop = 0;
 }
-document.querySelector('.rsvp').addEventListener('click', () => {
+function showAttendanceForm() {
  document.querySelector('.attendance-intro').hidden = true;
  document.querySelector('.rsvp-form-panel').hidden = false;
  attendanceDialog.classList.add('form-open');
  attendanceDialog.setAttribute('aria-labelledby','rsvp-form-title');
  attendanceDialog.scrollTop = 0;
  document.querySelector('.back-to-invitation').focus({preventScroll:true});
-});
+}
+document.querySelector('.rsvp').addEventListener('click', showAttendanceForm);
 document.querySelector('.back-to-invitation').addEventListener('click', () => { showAttendanceIntro(); document.querySelector('.rsvp').focus(); });
 const responseForm = document.querySelector('.rsvp-form');
 responseForm.addEventListener('change', () => {
