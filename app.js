@@ -55,6 +55,28 @@ if ('IntersectionObserver' in window) {
  coverObserver.observe(cover);
 } else startCover();
 motionPreference.addEventListener('change', showFullCover);
+const greeting = document.querySelector('.greeting');
+const greetingLetters = Array.from(config.greeting);
+greeting.setAttribute('aria-label', config.greeting);
+const greetingText = document.createElement('span');
+greetingText.setAttribute('aria-hidden', 'true');
+greetingText.textContent = config.greeting;
+greeting.replaceChildren(greetingText);
+let greetingTimer;
+function finishGreeting() { clearTimeout(greetingTimer); greetingText.textContent = config.greeting; }
+function typeGreeting() {
+ clearTimeout(greetingTimer);
+ if (motionPreference.matches) { finishGreeting(); return; }
+ greetingText.textContent = '';
+ let position = 0;
+ function nextLetter() {
+  greetingText.textContent = greetingLetters.slice(0, ++position).join('');
+  if (position < greetingLetters.length) greetingTimer = setTimeout(nextLetter, 65);
+ }
+ greetingTimer = setTimeout(nextLetter, 180);
+}
+motionPreference.addEventListener('change', finishGreeting);
+
 document.querySelector('.attendance-names').textContent = config.names.join(' 그리고 ');
 document.querySelector('.attendance-venue').textContent = config.venue;
 function imageNode(item) {
@@ -124,8 +146,13 @@ responseForm.addEventListener('submit', event => {
 if ('IntersectionObserver' in window) {
  document.documentElement.classList.add('js-ready');
  const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-  if (entry.intersectionRatio >= .18) entry.target.classList.add('in-view');
-  else if (!entry.isIntersecting) entry.target.classList.remove('in-view');
+  if (entry.intersectionRatio >= .18 && !entry.target.classList.contains('in-view')) {
+   entry.target.classList.add('in-view');
+   if (entry.target.id === 'invitation') typeGreeting();
+  } else if (entry.intersectionRatio <= .01) {
+   entry.target.classList.remove('in-view');
+   if (entry.target.id === 'invitation') finishGreeting();
+  }
  }), {threshold:[0,.18]});
  document.querySelectorAll('.section').forEach(section => {
   section.querySelectorAll('.reveal').forEach((el,index) => el.style.setProperty('--reveal-order', index));
