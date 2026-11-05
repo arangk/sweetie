@@ -5,7 +5,7 @@ document.querySelector('.venue-name').textContent = config.venue;
 document.querySelector('.address').textContent = config.address;
 const attendanceDialog = document.querySelector('.attendance-dialog');
 const illustrationCard = document.querySelector('.illustration-card');
-function openAttendance() { attendanceDialog.showModal(); document.body.classList.add('modal-open'); }
+function openAttendance() { showAttendanceIntro(); attendanceDialog.showModal(); document.body.classList.add('modal-open'); }
 illustrationCard.addEventListener('click', openAttendance);
 document.querySelectorAll('.open-attendance').forEach(button => button.addEventListener('click', openAttendance));
 document.querySelector('.close-attendance').addEventListener('click', () => attendanceDialog.close());
@@ -86,9 +86,36 @@ calendar.append(document.createElement('span'));
 for(let day = 1; day <= 28; day++) { const el = document.createElement('span'); el.textContent = day; if(day === 27) {el.className = 'wedding-date'; el.setAttribute('aria-label','27일 결혼식');} calendar.append(el); }
 const remaining = Math.ceil((new Date(config.date) - new Date()) / 86400000);
 document.querySelector('.countdown').textContent = remaining > 0 ? `결혼식까지 ${remaining}일 남았습니다` : remaining === 0 ? '오늘, 우리의 새로운 이야기가 시작됩니다.' : '함께해 주신 마음, 감사합니다.';
+function showAttendanceIntro() {
+ document.querySelector('.attendance-intro').hidden = false;
+ document.querySelector('.rsvp-form-panel').hidden = true;
+ attendanceDialog.classList.remove('form-open');
+ attendanceDialog.setAttribute('aria-labelledby','attendance-title');
+ attendanceDialog.scrollTop = 0;
+}
 document.querySelector('.rsvp').addEventListener('click', () => {
- if(config.rsvpUrl && /^https?:\/\//.test(config.rsvpUrl)) window.open(config.rsvpUrl, '_blank', 'noopener,noreferrer');
- else document.querySelector('.rsvp-status').textContent = '참석 알림 링크는 준비 중입니다.';
+ document.querySelector('.attendance-intro').hidden = true;
+ document.querySelector('.rsvp-form-panel').hidden = false;
+ attendanceDialog.classList.add('form-open');
+ attendanceDialog.setAttribute('aria-labelledby','rsvp-form-title');
+ attendanceDialog.scrollTop = 0;
+ document.querySelector('.back-to-invitation').focus({preventScroll:true});
+});
+document.querySelector('.back-to-invitation').addEventListener('click', () => { showAttendanceIntro(); document.querySelector('.rsvp').focus(); });
+const responseForm = document.querySelector('.rsvp-form');
+responseForm.addEventListener('change', () => {
+ const absent = responseForm.elements.attendance.value === 'no';
+ document.querySelector('.attending-fields').hidden = absent;
+ document.querySelector('.companion-fields').hidden = absent;
+ for (const field of responseForm.querySelectorAll('.attending-fields input,.companion-fields input')) field.disabled = absent;
+});
+responseForm.addEventListener('submit', event => {
+ event.preventDefault();
+ const status = document.querySelector('.rsvp-status');
+ if (config.rsvpUrl && /^https:\/\//.test(config.rsvpUrl)) {
+  window.open(config.rsvpUrl, '_blank', 'noopener,noreferrer');
+  status.textContent = '구글폼이 열렸습니다. 응답은 구글폼에서 입력하고 제출해 주세요. 여기 입력한 내용은 전달되지 않습니다.';
+ } else status.textContent = '아직 응답이 전달되지 않았습니다. 구글폼 연결 후 이용해 주세요.';
 });
 if ('IntersectionObserver' in window) {
  document.documentElement.classList.add('js-ready');
