@@ -11,41 +11,47 @@ illustrationCard.addEventListener('click', () => {
 document.querySelector('.close-attendance').addEventListener('click', () => attendanceDialog.close());
 attendanceDialog.addEventListener('close', () => document.body.classList.remove('modal-open'));
 
-// Reserve both title lines so typing never shifts the illustration below it.
+// Run the cover as one sequence: kicker, typing, subtitle, card, footer.
+const cover = document.querySelector('.cover');
 const title = document.querySelector('#cover-title');
 const typeLines = [...title.querySelectorAll('.type-line')];
 const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 let typeTimer;
-function showFullTitle() {
- clearTimeout(typeTimer);
+let coverRun = 0;
+function showFullCover() {
+ clearTimeout(typeTimer); coverRun++;
  typeLines.forEach(line => { line.textContent = line.dataset.text; line.classList.remove('typing'); });
+ cover.dataset.phase = 'complete';
 }
-function typeTitle() {
- clearTimeout(typeTimer);
- if (motionPreference.matches) { showFullTitle(); return; }
+function startCover() {
+ clearTimeout(typeTimer); const run = ++coverRun;
+ if (motionPreference.matches) { showFullCover(); return; }
+ cover.dataset.phase = 'kicker';
  typeLines.forEach(line => { line.textContent = ''; line.classList.remove('typing'); });
  let lineIndex = 0, character = 0;
  function nextCharacter() {
-  const line = typeLines[lineIndex];
-  line.classList.add('typing');
+  if (run !== coverRun) return;
+  const line = typeLines[lineIndex]; line.classList.add('typing');
   line.textContent = line.dataset.text.slice(0, ++character);
-  if (character < line.dataset.text.length) typeTimer = window.setTimeout(nextCharacter, 85);
+  if (character < line.dataset.text.length) typeTimer = setTimeout(nextCharacter, 75);
   else {
    line.classList.remove('typing'); lineIndex++; character = 0;
-   if (lineIndex < typeLines.length) typeTimer = window.setTimeout(nextCharacter, 140);
+   if (lineIndex < typeLines.length) typeTimer = setTimeout(nextCharacter, 110);
+   else { cover.dataset.phase = 'details'; typeTimer = setTimeout(() => { if (run === coverRun) cover.dataset.phase = 'complete'; }, 1300); }
   }
  }
- typeTimer = window.setTimeout(nextCharacter, 180);
+ typeTimer = setTimeout(() => { if(run === coverRun) { cover.dataset.phase = 'typing'; nextCharacter(); } }, 650);
 }
 if ('IntersectionObserver' in window) {
- const titleObserver = new IntersectionObserver(entries => {
+ document.documentElement.classList.add('cover-motion');
+ const coverObserver = new IntersectionObserver(entries => {
   for (const entry of entries) {
-   if (entry.isIntersecting) typeTitle(); else showFullTitle();
+   if (entry.isIntersecting) startCover(); else { clearTimeout(typeTimer); coverRun++; cover.dataset.phase = 'idle'; }
   }
- }, {threshold:.4});
- titleObserver.observe(title);
-} else typeTitle();
-motionPreference.addEventListener('change', showFullTitle);
+ }, {threshold:.55});
+ coverObserver.observe(cover);
+} else startCover();
+motionPreference.addEventListener('change', showFullCover);
 document.querySelector('.attendance-names').textContent = config.names.join(' 그리고 ');
 document.querySelector('.attendance-venue').textContent = config.venue;
 function imageNode(item) {
@@ -86,8 +92,13 @@ document.querySelector('.rsvp').addEventListener('click', () => {
 });
 if ('IntersectionObserver' in window) {
  document.documentElement.classList.add('js-ready');
- const observer = new IntersectionObserver(entries => entries.forEach(entry => { entry.target.classList.toggle('visible', entry.isIntersecting); }), {threshold:.1});
- document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+ const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+  entry.target.classList.toggle('in-view', entry.isIntersecting);
+ }), {threshold:.45});
+ document.querySelectorAll('.section').forEach(section => {
+  section.querySelectorAll('.reveal').forEach((el,index) => el.style.setProperty('--reveal-order', index));
+  observer.observe(section);
+ });
 }
 const locationInfo = config.location;
 document.querySelector('.location-venue').textContent = config.venue;
@@ -114,7 +125,7 @@ for (const [name, url] of [['네이버 지도', locationInfo.naverUrl], ['카카
  mapLinks.append(link);
 }
 for (const item of locationInfo.transit) {
- const row = document.createElement('div'); const heading = document.createElement('h3'); const text = document.createElement('p'); heading.textContent = item.title; text.textContent = item.text; row.append(heading, text); document.querySelector('.transport').append(row);
+ const row = document.createElement('details'); const heading = document.createElement('summary'); const text = document.createElement('p'); heading.textContent = item.title; text.textContent = item.text; row.append(heading, text); document.querySelector('.transport').append(row);
 }
 
 for (const [side, accounts] of Object.entries(config.accounts)) {
