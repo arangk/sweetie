@@ -5,9 +5,9 @@ document.querySelector('.venue-name').textContent = config.venue;
 document.querySelector('.address').textContent = config.address;
 const attendanceDialog = document.querySelector('.attendance-dialog');
 const illustrationCard = document.querySelector('.illustration-card');
-illustrationCard.addEventListener('click', () => {
- attendanceDialog.showModal(); document.body.classList.add('modal-open');
-});
+function openAttendance() { attendanceDialog.showModal(); document.body.classList.add('modal-open'); }
+illustrationCard.addEventListener('click', openAttendance);
+document.querySelectorAll('.open-attendance').forEach(button => button.addEventListener('click', openAttendance));
 document.querySelector('.close-attendance').addEventListener('click', () => attendanceDialog.close());
 attendanceDialog.addEventListener('close', () => document.body.classList.remove('modal-open'));
 
@@ -93,8 +93,9 @@ document.querySelector('.rsvp').addEventListener('click', () => {
 if ('IntersectionObserver' in window) {
  document.documentElement.classList.add('js-ready');
  const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-  entry.target.classList.toggle('in-view', entry.isIntersecting);
- }), {threshold:.45});
+  if (entry.intersectionRatio >= .18) entry.target.classList.add('in-view');
+  else if (!entry.isIntersecting) entry.target.classList.remove('in-view');
+ }), {threshold:[0,.18]});
  document.querySelectorAll('.section').forEach(section => {
   section.querySelectorAll('.reveal').forEach((el,index) => el.style.setProperty('--reveal-order', index));
   observer.observe(section);
