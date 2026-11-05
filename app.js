@@ -1,3 +1,17 @@
+// Preload final fonts before typing. Keep a stable fallback on failure/slow networks.
+const fontsReady = Promise.all([
+ ['orbit','16px Orbit'], ['script','16px Parisienne'], ['hand','25px "Daughter To Mom"']
+].map(async ([key,font]) => {
+ let timer;
+ try {
+  const faces = await Promise.race([
+   document.fonts.load(font),
+   new Promise(resolve => { timer = setTimeout(() => resolve([]), 3500); })
+  ]);
+  if (!faces.length) document.documentElement.classList.add(`font-fallback-${key}`);
+ } catch { document.documentElement.classList.add(`font-fallback-${key}`); }
+ finally { clearTimeout(timer); }
+})).then(() => document.documentElement.classList.remove('fonts-loading'));
 const config = window.invitation;
 document.querySelectorAll('.couple').forEach(el => el.textContent = config.names.join('  ·  '));
 document.querySelector('.greeting').textContent = config.greeting;
@@ -26,8 +40,10 @@ function showFullCover() {
  typeLines.forEach(line => { line.textContent = line.dataset.text; line.classList.remove('typing'); });
  cover.dataset.phase = 'complete';
 }
-function startCover() {
+async function startCover() {
  clearTimeout(typeTimer); const run = ++coverRun;
+ await fontsReady;
+ if (run !== coverRun) return;
  if (motionPreference.matches) { showFullCover(); return; }
  cover.dataset.phase = 'typing';
  typeLines.forEach(line => { line.textContent = ''; line.classList.remove('typing'); });
@@ -63,13 +79,18 @@ greetingText.setAttribute('aria-hidden', 'true');
 greetingText.textContent = config.greeting;
 greeting.replaceChildren(greetingText);
 let greetingTimer;
-function finishGreeting() { clearTimeout(greetingTimer); greetingText.textContent = config.greeting; }
-function typeGreeting() {
+let greetingRun = 0;
+function finishGreeting() { greetingRun++; clearTimeout(greetingTimer); greetingText.textContent = config.greeting; }
+async function typeGreeting() {
  clearTimeout(greetingTimer);
+ const run = ++greetingRun;
+ await fontsReady;
+ if (run !== greetingRun) return;
  if (motionPreference.matches) { finishGreeting(); return; }
  greetingText.textContent = '';
  let position = 0;
  function nextLetter() {
+  if (run !== greetingRun) return;
   greetingText.textContent = greetingLetters.slice(0, ++position).join('');
   if (position < greetingLetters.length) greetingTimer = setTimeout(nextLetter, 65);
  }
