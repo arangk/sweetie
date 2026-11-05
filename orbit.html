@@ -10,24 +10,12 @@
 </head>
 <body class="font-orbit">
 <div class="desktop-note" aria-hidden="true"><span>SWEETIE / INVITATION STUDY</span><p>A little story,<br>a lifetime together.</p><span>SCROLL TO DISCOVER ↓</span></div>
-<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><filter id="paint-texture"><feTurbulence type="fractalNoise" baseFrequency=".055" numOctaves="3" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
 <main>
 <section class="cover" aria-labelledby="cover-title">
 <p class="cover-kicker">서준 그리고 지우</p>
-<h1 id="cover-title">Happy<br><span>Wedding Day</span></h1>
+<h1 id="cover-title" aria-label="Happy wedding day"><span class="type-line" data-text="Happy" aria-hidden="true">Happy</span><span class="type-line" data-text="wedding day" aria-hidden="true">wedding day</span></h1>
 <p class="cover-sub">소중한 당신과 함께하고 싶은 날</p>
-<div class="envelope-stage">
-<div class="envelope-scene" data-state="closed">
-<button class="envelope" type="button" aria-label="봉투에서 초대장 꺼내기" aria-expanded="false" aria-controls="attendance-dialog">
-<span class="envelope-back" aria-hidden="true"></span>
-<span class="envelope-flap" aria-hidden="true"></span>
-
-<svg class="envelope-front" viewBox="0 0 400 260" aria-hidden="true"><defs><filter id="paper-grain"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".09"/></feComponentTransfer></filter></defs><path d="M0 0L200 128 400 0V260H0Z" fill="#e5d9cf"/><path d="M0 0L205 150 0 260Z" fill="#eee4da"/><path d="M400 0L195 150 400 260Z" fill="#e9dfd5"/><path d="M0 260L200 110 400 260Z" fill="#f1e8df"/><path d="M0 0H400V260H0Z" filter="url(#paper-grain)" fill="#8d7668"/></svg>
-<span class="envelope-seal" aria-hidden="true"><span>초대</span></span>
-</button>
-<button class="invitation-sheet" type="button" aria-label="일러스트 카드로 참석 안내 열기" aria-controls="attendance-dialog"><img class="cover-illustration" src="assets/cover-illustration.webp" alt="두 사람의 수채화 초대장"></button>
-</div>
-</div>
+<button class="illustration-card" type="button" aria-label="초대합니다 — 참석 안내 열기" aria-controls="attendance-dialog" aria-haspopup="dialog"><img class="cover-illustration" src="assets/cover-illustration.webp" alt="눈 오는 날의 두 사람, 수채화 초대장"></button>
 <div class="cover-footer"><p class="couple"></p><span>2027년 2월 27일 토요일 · 오후 12시 30분</span><a href="#invitation" class="scroll-cue" aria-label="초대글로 이동">↓</a></div>
 </section>
 <section id="invitation" class="invitation section">
@@ -51,7 +39,7 @@
 <p class="countdown reveal" aria-live="off"></p>
 </section>
 <section class="location section" aria-labelledby="location-title">
-<div class="section-label reveal">04 / FIND US <span></span></div>
+<div class="section-label reveal">04 / DIRECTIONS <span></span></div>
 <h2 id="location-title" class="reveal">오시는길</h2>
 <p class="section-copy reveal">소중한 걸음이 닿을 곳을 안내합니다.</p>
 <div class="map-frame reveal"><div class="map-placeholder"><span class="map-symbol" aria-hidden="true">⌖</span><p>오시는 길</p><small>예식장 확정 후 약도를 넣어주세요</small></div></div>
@@ -70,7 +58,7 @@
 <dialog class="lightbox" aria-label="갤러리 이미지 확대"><div class="lightbox-bar"><span class="image-count"></span><button class="close-lightbox" aria-label="확대 보기 닫기">닫기 ×</button></div><div class="lightbox-image"></div><div class="lightbox-bottom"><button class="previous" aria-label="이전 이미지">←</button><p class="image-caption" hidden></p><button class="next" aria-label="다음 이미지">→</button></div></dialog>
 <dialog class="attendance-dialog" id="attendance-dialog" aria-labelledby="attendance-title">
 <button class="close-attendance" type="button" aria-label="참석 안내 닫기">×</button>
-<p class="attendance-kicker">소중한 당신을 초대합니다</p><h2 id="attendance-title">참석 여부 전달</h2>
+<p class="attendance-kicker">소중한 당신을 초대합니다</p><h2 id="attendance-title">초대합니다</h2>
 <p class="attendance-copy">함께해 주실 모든 분들을<br>더욱 따뜻하게 모시고자 합니다.<br>참석 여부를 알려주시면 감사하겠습니다.</p>
 <div class="attendance-info"><p class="attendance-names"></p><p>2027년 2월 27일 토요일 오후 12시 30분</p><p class="attendance-venue"></p></div>
 <button class="rsvp" type="button">참석 여부 전달하기 ↗</button><p class="rsvp-status" role="status"></p>

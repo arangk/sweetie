@@ -3,29 +3,49 @@ document.querySelectorAll('.couple').forEach(el => el.textContent = config.names
 document.querySelector('.greeting').textContent = config.greeting;
 document.querySelector('.venue-name').textContent = config.venue;
 document.querySelector('.address').textContent = config.address;
-const envelope = document.querySelector('.envelope');
 const attendanceDialog = document.querySelector('.attendance-dialog');
-const scene = document.querySelector('.envelope-scene');
-const invitationSheet = document.querySelector('.invitation-sheet');
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-let cardTimer;
-function extractCard() {
- if (['extracting','out','returning'].includes(scene.dataset.state)) return;
- envelope.setAttribute('aria-expanded', 'true');
- scene.dataset.state = 'extracting';
- cardTimer = window.setTimeout(() => { scene.dataset.state = 'out'; invitationSheet.focus({preventScroll:true}); }, reducedMotion() ? 0 : 1200);
-}
-envelope.addEventListener('click', extractCard);
-invitationSheet.addEventListener('click', () => {
- if (scene.dataset.state !== 'out') { extractCard(); return; }
+const illustrationCard = document.querySelector('.illustration-card');
+illustrationCard.addEventListener('click', () => {
  attendanceDialog.showModal(); document.body.classList.add('modal-open');
 });
 document.querySelector('.close-attendance').addEventListener('click', () => attendanceDialog.close());
-attendanceDialog.addEventListener('close', () => {
- document.body.classList.remove('modal-open');
- scene.dataset.state = 'returning';
- cardTimer = window.setTimeout(() => { scene.dataset.state = 'resting'; envelope.focus({preventScroll:true}); }, reducedMotion() ? 0 : 850);
-});
+attendanceDialog.addEventListener('close', () => document.body.classList.remove('modal-open'));
+
+// Reserve both title lines so typing never shifts the illustration below it.
+const title = document.querySelector('#cover-title');
+const typeLines = [...title.querySelectorAll('.type-line')];
+const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+let typeTimer;
+function showFullTitle() {
+ clearTimeout(typeTimer);
+ typeLines.forEach(line => { line.textContent = line.dataset.text; line.classList.remove('typing'); });
+}
+function typeTitle() {
+ clearTimeout(typeTimer);
+ if (motionPreference.matches) { showFullTitle(); return; }
+ typeLines.forEach(line => { line.textContent = ''; line.classList.remove('typing'); });
+ let lineIndex = 0, character = 0;
+ function nextCharacter() {
+  const line = typeLines[lineIndex];
+  line.classList.add('typing');
+  line.textContent = line.dataset.text.slice(0, ++character);
+  if (character < line.dataset.text.length) typeTimer = window.setTimeout(nextCharacter, 85);
+  else {
+   line.classList.remove('typing'); lineIndex++; character = 0;
+   if (lineIndex < typeLines.length) typeTimer = window.setTimeout(nextCharacter, 140);
+  }
+ }
+ typeTimer = window.setTimeout(nextCharacter, 180);
+}
+if ('IntersectionObserver' in window) {
+ const titleObserver = new IntersectionObserver(entries => {
+  for (const entry of entries) {
+   if (entry.isIntersecting) typeTitle(); else showFullTitle();
+  }
+ }, {threshold:.4});
+ titleObserver.observe(title);
+} else typeTitle();
+motionPreference.addEventListener('change', showFullTitle);
 document.querySelector('.attendance-names').textContent = config.names.join(' 그리고 ');
 document.querySelector('.attendance-venue').textContent = config.venue;
 function imageNode(item) {
