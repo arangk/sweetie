@@ -174,12 +174,60 @@ dialog.addEventListener('keydown', event => { if (event.key === 'ArrowRight') { 
 let touchX = null;
 dialog.addEventListener('touchstart', e => touchX = e.changedTouches[0].clientX, {passive:true});
 dialog.addEventListener('touchend', e => { if (touchX !== null) { const delta = e.changedTouches[0].clientX - touchX; if (Math.abs(delta) > 45) step(delta < 0 ? 1 : -1); touchX = null; } }, {passive:true});
+// 화면의 모든 예식 날짜·시간·달력은 설정 한 곳에서 계산합니다.
+function getWeddingDate(value) {
+ const match = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:\d{2})$/);
+ if (!match) return null;
+ const [year,month,day,hour,minute,second] = match.slice(1,7).map(part => Number(part || 0));
+ const lastDay = new Date(Date.UTC(year,month,0)).getUTCDate();
+ if (year < 1000 || month < 1 || month > 12 || day < 1 || day > lastDay || hour > 23 || minute > 59 || second > 59) return null;
+ const date = new Date(value);
+ if (!Number.isFinite(date.getTime())) return null;
+ // 열람하는 기기의 시간대와 관계없이 한국 시간으로 표시합니다.
+ const korean = new Date(date.getTime() + 9*60*60*1000);
+ return {year:korean.getUTCFullYear(),month:korean.getUTCMonth()+1,day:korean.getUTCDate(),weekday:korean.getUTCDay(),hour:korean.getUTCHours(),minute:korean.getUTCMinutes()};
+}
 const calendar = document.querySelector('.calendar');
-['일','월','화','수','목','금','토'].forEach(day => {const el = document.createElement('span'); el.className = 'weekday'; el.textContent = day; calendar.append(el);});
-calendar.append(document.createElement('span'));
-for(let day = 1; day <= 28; day++) { const el = document.createElement('span'); el.textContent = day; if(day === 27) {el.className = 'wedding-date'; el.setAttribute('aria-label','27일 결혼식');} calendar.append(el); }
-const remaining = Math.ceil((new Date(config.date) - new Date()) / 86400000);
-document.querySelector('.countdown').textContent = remaining > 0 ? `결혼식까지 ${remaining}일 남았습니다` : remaining === 0 ? '오늘, 우리의 새로운 이야기가 시작됩니다.' : '함께해 주신 마음, 감사합니다.';
+const weekNames = ['일','월','화','수','목','금','토'];
+for (const day of weekNames) {
+ const el = document.createElement('span'); el.className = 'weekday'; el.textContent = day; calendar.append(el);
+}
+const weddingDate = getWeddingDate(config.date);
+function updateWeddingCountdown() {
+ const countdown = document.querySelector('.countdown');
+ if (!weddingDate) { countdown.textContent = '설정에서 예식 날짜와 시간을 확인해 주세요.'; return; }
+ const today = new Date(Date.now() + 9*60*60*1000);
+ const todayDay = Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate());
+ const weddingDay = Date.UTC(weddingDate.year,weddingDate.month-1,weddingDate.day);
+ const remaining = Math.round((weddingDay - todayDay)/86400000);
+ countdown.textContent = remaining > 0 ? `결혼식까지 ${remaining}일 남았습니다` : remaining === 0 ? '오늘은 결혼식 날입니다.' : '함께해 주신 마음, 감사합니다.';
+}
+if (weddingDate) {
+ const {year,month,day,weekday,hour,minute} = weddingDate;
+ const dateText = `${year}년 ${month}월 ${day}일 ${weekNames[weekday]}요일`;
+ const timeText = `${hour < 12 ? '오전' : '오후'} ${hour%12 || 12}시${minute ? ` ${minute}분` : ''}`;
+ document.querySelectorAll('.full-wedding-date').forEach(el => el.textContent = `${dateText} · ${timeText}`);
+ document.querySelector('.wedding-weekday-time').textContent = `${weekNames[weekday]}요일 ${timeText}`;
+ document.querySelector('.wedding-day-number').textContent = day;
+ document.querySelector('.wedding-month').textContent = `${year}년 ${month}월`;
+ calendar.setAttribute('aria-label',`${year}년 ${month}월 달력, ${day}일 ${weekNames[weekday]}요일 결혼식`);
+ const firstWeekday = new Date(Date.UTC(year,month-1,1)).getUTCDay();
+ const daysInMonth = new Date(Date.UTC(year,month,0)).getUTCDate();
+ calendar.dataset.weeks = Math.ceil((firstWeekday + daysInMonth)/7);
+ for (let blank=0;blank<firstWeekday;blank++) { const el=document.createElement('span'); el.setAttribute('aria-hidden','true'); calendar.append(el); }
+ for (let number=1;number<=daysInMonth;number++) {
+  const el=document.createElement('span'); el.textContent=number;
+  if (number===day) { el.className='wedding-date'; el.setAttribute('aria-label',`${month}월 ${day}일 결혼식`); }
+  calendar.append(el);
+ }
+} else {
+ document.querySelectorAll('.full-wedding-date,.wedding-weekday-time,.wedding-month').forEach(el=>el.textContent='예식 날짜를 확인해 주세요.');
+ document.querySelector('.wedding-day-number').textContent='—';
+ calendar.setAttribute('aria-label','예식 날짜가 올바르지 않아 달력을 표시하지 않았습니다.');
+}
+updateWeddingCountdown();
+setInterval(updateWeddingCountdown,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden) updateWeddingCountdown();});
 function showAttendanceIntro() {
  document.querySelector('.attendance-intro').hidden = false;
  document.querySelector('.rsvp-form-panel').hidden = true;
