@@ -54,9 +54,21 @@ body{touch-action:pan-y}button,a,summary{touch-action:manipulation}img{-webkit-u
 .gallery-stack[data-count="2"] .gallery-card:nth-child(2){top:22%}
 .gallery-stack.many-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:0;height:auto;padding:12px 8px 25px;margin-bottom:10px}.gallery-stack.many-photos .gallery-card:nth-child(n){position:relative;left:auto;right:auto;top:auto;width:112%;height:auto;margin:0 0 15px;translate:none;--angle:-5deg}.gallery-stack.many-photos .gallery-card:nth-child(even){margin-top:40px;margin-left:-12%;--angle:5deg}.gallery-stack.many-photos .gallery-card:nth-child(3n){--angle:-3deg}.submit-rsvp:disabled{opacity:.5;cursor:default}
 
-@font-face{font-family:"Daughter To Mom";src:url("assets/fonts/NanumDaughterToMom-common.woff2") format("woff2");font-display:block;unicode-range:U+20-7E,U+AC04,U+AC1C,U+ACC4,U+ADF8,U+B0A0,U+B2C8,U+B2E4,U+B300,U+B354,U+B429,U+B530,U+B73B,U+B7EC,U+B85C,U+BD84,U+C11C,U+C18C,U+C2DC,U+C5B4,U+C5D0,U+C5EC,U+C744,U+C758,U+C774,U+C791,U+C808,U+C838,U+C911,U+CCAB,U+CD08,U+D3EC,U+D55C,U+D569}
-@font-face{font-family:"Daughter To Mom";src:url("assets/fonts/NanumDaughterToMom.woff2") format("woff2");font-display:block;unicode-range:U+0-1F,U+7F-AC03,U+AC05-AC1B,U+AC1D-ACC3,U+ACC5-ADF7,U+ADF9-B09F,U+B0A1-B2C7,U+B2C9-B2E3,U+B2E5-B2FF,U+B301-B353,U+B355-B428,U+B42A-B52F,U+B531-B73A,U+B73C-B7EB,U+B7ED-B85B,U+B85D-BD83,U+BD85-C11B,U+C11D-C18B,U+C18D-C2DB,U+C2DD-C5B3,U+C5B5-C5CF,U+C5D1-C5EB,U+C5ED-C743,U+C745-C757,U+C759-C773,U+C775-C790,U+C792-C807,U+C809-C837,U+C839-C910,U+C912-CCAA,U+CCAC-CD07,U+CD09-D3EB,U+D3ED-D55B,U+D55D-D568,U+D56A-10FFFF}
+
+
 
 @font-face{font-family:"Cormorant Garamond";src:url("assets/fonts/CormorantGaramond.woff2") format("woff2");font-weight:300 700;font-display:block}
 /* 폰트·스크롤 응답 개선: 강제 정지와 과한 대기/필터 제거 */
 html{scroll-snap-type:y proximity;scroll-behavior:auto}.section.in-view .reveal{transition-delay:min(calc(var(--reveal-order,0)*.035s),.14s);transition-duration:.28s}.gallery-section.in-view .gallery-card{animation-duration:.4s;animation-delay:calc(.08s + var(--photo-order)*.08s)}.gallery-section.in-view .gallery-card img{animation-delay:calc(.48s + var(--photo-order)*.08s)}main::before{background-image:url('assets/paper-grain.svg');background-size:96px 96px;opacity:.25}.cover[data-phase=idle] .illustration-card,.day:not(.in-view) .wedding-date{animation-play-state:paused}
+
+@font-face{font-family:"Daughter To Mom";src:url("assets/fonts/NanumDaughterToMom.woff2") format("woff2");font-display:block;font-weight:400}
+/* 화면 이동은 하나의 트랙만 담당하고, 등장 효과는 도착한 뒤 시작합니다. */
+html.paged,html.paged body{height:100%;overflow:hidden;scroll-snap-type:none;overscroll-behavior:none}
+.paged main{height:100dvh;overflow:hidden;position:relative}
+.page-track{height:100%;transition:transform .48s cubic-bezier(.22,.75,.25,1);will-change:transform}
+.page-track>section{height:100%;min-height:100%;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-snap-align:none;scrollbar-width:none;position:relative}
+.page-track>section::-webkit-scrollbar{display:none}
+.page-track>.invitation{overflow:hidden}
+.section.in-view .reveal{transition-duration:.5s;transition-delay:calc(var(--reveal-order,0)*.09s)}
+.gallery-section.in-view .gallery-card{animation-duration:.55s;animation-delay:calc(.12s + var(--photo-order)*.09s)}
+@media(prefers-reduced-motion:reduce){.page-track{transition:none}}

@@ -1,15 +1,9 @@
 const config = window.invitation;
 // 폰트별로 준비를 확인합니다. 큰 손글씨 파일 때문에 첫 화면까지 기다리지 않습니다.
 async function prepareFont(key, font, sample = " ") {
- let timer;
  try {
-  const faces = await Promise.race([
-   document.fonts.load(font,sample.replace(/[\r\n\t]/g,' ')),
-   new Promise(resolve => { timer = setTimeout(() => resolve([]), 3500); })
-  ]);
-  if (!faces.length) document.documentElement.classList.add(`font-fallback-${key}`);
+  await document.fonts.load(font, sample.replace(/[\r\n\t]/g, ' '));
  } catch { document.documentElement.classList.add(`font-fallback-${key}`); }
- finally { clearTimeout(timer); }
 }
 const orbitFontReady = prepareFont('orbit','16px Orbit');
 const scriptFontReady = prepareFont('script','16px Parisienne');
@@ -64,15 +58,7 @@ async function startCover() {
  }
  typeTimer = setTimeout(() => { if(run === coverRun) { cover.dataset.phase = 'typing'; nextCharacter(); } }, 120);
 }
-if ('IntersectionObserver' in window) {
- document.documentElement.classList.add('cover-motion');
- const coverObserver = new IntersectionObserver(entries => {
-  for (const entry of entries) {
-   if (entry.isIntersecting) startCover(); else { clearTimeout(typeTimer); coverRun++; cover.dataset.phase = 'idle'; }
-  }
- }, {threshold:.55});
- coverObserver.observe(cover);
-} else startCover();
+document.documentElement.classList.add('cover-motion');
 motionPreference.addEventListener('change', showFullCover);
 const greeting = document.querySelector('.greeting');
 const greetingLetters = Array.from(config.greeting);
@@ -294,22 +280,6 @@ responseForm.addEventListener('submit', event => {
   status.textContent = '구글폼이 열렸습니다. 응답은 구글폼에서 입력하고 제출해 주세요. 여기 입력한 내용은 전달되지 않습니다.';
  } else status.textContent = '아직 응답이 전달되지 않았습니다. 구글폼 연결 후 이용해 주세요.';
 });
-if ('IntersectionObserver' in window) {
- document.documentElement.classList.add('js-ready');
- const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-  if ((entry.intersectionRatio >= .18 || (entry.target === gallerySection && entry.intersectionRatio > 0)) && !entry.target.classList.contains('in-view')) {
-   entry.target.classList.add('in-view');
-   if (entry.target.id === 'invitation') typeGreeting();
-  } else if (entry.intersectionRatio <= .01 && !(entry.target === gallerySection && entry.intersectionRatio > 0)) {
-   entry.target.classList.remove('in-view');
-   if (entry.target.id === 'invitation') finishGreeting();
-  }
- }), {threshold:[0,.18]});
- document.querySelectorAll('.section').forEach(section => {
-  section.querySelectorAll('.reveal').forEach((el,index) => el.style.setProperty('--reveal-order', index));
-  observer.observe(section);
- });
-}
 const locationInfo = config.location;
 document.querySelector('.location-venue').textContent = config.venue;
 document.querySelector('.location-street').textContent = config.address;
@@ -351,3 +321,86 @@ for (const [side, accounts] of Object.entries(config.accounts)) {
   list.append(row, holder, copy, status);
  }
 }
+
+// 한 번의 휠·스와이프를 한 페이지 이동으로 처리합니다.
+// 긴 내용은 페이지 안에서 먼저 스크롤하고, 팝업 입력에는 개입하지 않습니다.
+const pageHost = document.querySelector('main');
+const pageTrack = document.createElement('div');
+pageTrack.className = 'page-track';
+pageTrack.append(...pageHost.children);
+pageHost.append(pageTrack);
+const pages = [...pageTrack.children];
+let pageIndex = 0, moving = false, wheelTimer, wheelGesture = false;
+document.documentElement.classList.add('paged', 'js-ready');
+pages.forEach(page => page.querySelectorAll('.reveal').forEach((el, index) => el.style.setProperty('--reveal-order', index)));
+function activatePage() {
+ pages.forEach((page, index) => {
+  page.classList.toggle('in-view', index === pageIndex);
+  page.inert = index !== pageIndex;
+ });
+ if (pageIndex === 0) startCover();
+ if (pages[pageIndex].id === 'invitation') typeGreeting();
+}
+function movePage(direction) {
+ const next = Math.max(0, Math.min(pages.length - 1, pageIndex + direction));
+ if (moving || next === pageIndex) return;
+ moving = true;
+ clearTimeout(typeTimer); coverRun++; cover.dataset.phase = 'idle';
+ finishGreeting();
+ pages.forEach(page => page.classList.remove('in-view'));
+ pageIndex = next;
+ pages[pageIndex].scrollTop = 0;
+ pageTrack.style.transform = `translate3d(0,${-pageIndex * pageHost.clientHeight}px,0)`;
+ const finish = () => { moving = false; activatePage(); };
+ if (motionPreference.matches) finish();
+ else setTimeout(finish, 480);
+}
+function inDialog(event) { return event.target.closest('dialog') || document.querySelector('dialog[open]'); }
+function canScrollPage(direction) {
+ const page = pages[pageIndex];
+ return direction > 0 ? page.scrollTop + page.clientHeight < page.scrollHeight - 2 : page.scrollTop > 2;
+}
+window.addEventListener('wheel', event => {
+ if (inDialog(event) || event.ctrlKey || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+ const direction = Math.sign(event.deltaY);
+ if (!direction) return;
+ if (!moving && canScrollPage(direction)) return;
+ event.preventDefault();
+ clearTimeout(wheelTimer);
+ wheelTimer = setTimeout(() => { wheelGesture = false; }, 180);
+ if (moving || wheelGesture || Math.abs(event.deltaY) < 8) return;
+ wheelGesture = true;
+ movePage(direction);
+}, {passive:false});
+let touchStartY = null, touchStartX = 0, touchDirection = 0, nativeTouch = false;
+window.addEventListener('touchstart', event => {
+ if (inDialog(event) || event.touches.length !== 1) { touchStartY = null; return; }
+ touchStartY = event.touches[0].clientY;
+ touchStartX = event.touches[0].clientX;
+ touchDirection = 0; nativeTouch = false;
+}, {passive:true});
+window.addEventListener('touchmove', event => {
+ if (touchStartY === null) return;
+ const delta = touchStartY - event.touches[0].clientY;
+ if (Math.abs(delta) < 8 || Math.abs(delta) < Math.abs(touchStartX - event.touches[0].clientX)) return;
+ touchDirection = Math.sign(delta);
+ if (!moving && canScrollPage(touchDirection)) { nativeTouch = true; return; }
+ event.preventDefault();
+}, {passive:false});
+window.addEventListener('touchcancel', () => { touchStartY = null; }, {passive:true});
+window.addEventListener('touchend', event => {
+ if (touchStartY !== null && !nativeTouch && !moving && Math.abs(touchStartY - event.changedTouches[0].clientY) > 35) movePage(touchDirection);
+ touchStartY = null;
+}, {passive:true});
+window.addEventListener('keydown', event => {
+ if (inDialog(event) || event.target.closest('input,textarea,select,button,a,summary,[contenteditable]')) return;
+ const direction = ['ArrowDown','PageDown',' '].includes(event.key) ? 1 : ['ArrowUp','PageUp'].includes(event.key) ? -1 : 0;
+ if (!direction || canScrollPage(direction)) return;
+ event.preventDefault(); movePage(direction);
+});
+window.addEventListener('resize', () => {
+ pageTrack.style.transition = 'none';
+ pageTrack.style.transform = `translate3d(0,${-pageIndex * pageHost.clientHeight}px,0)`;
+ requestAnimationFrame(() => requestAnimationFrame(() => { pageTrack.style.transition = ''; }));
+});
+activatePage();
