@@ -1,9 +1,10 @@
+const config = window.invitation;
 // 폰트별로 준비를 확인합니다. 큰 손글씨 파일 때문에 첫 화면까지 기다리지 않습니다.
-async function prepareFont(key, font) {
+async function prepareFont(key, font, sample = " ") {
  let timer;
  try {
   const faces = await Promise.race([
-   document.fonts.load(font),
+   document.fonts.load(font,sample.replace(/[\r\n\t]/g,' ')),
    new Promise(resolve => { timer = setTimeout(() => resolve([]), 3500); })
   ]);
   if (!faces.length) document.documentElement.classList.add(`font-fallback-${key}`);
@@ -12,10 +13,9 @@ async function prepareFont(key, font) {
 }
 const orbitFontReady = prepareFont('orbit','16px Orbit');
 const scriptFontReady = prepareFont('script','16px Parisienne');
-const coverFontsReady = Promise.all([orbitFontReady, scriptFontReady]).then(() => document.documentElement.classList.remove('cover-font-loading'));
-const greetingFontReady = prepareFont('hand','25px "Daughter To Mom"').then(() => document.documentElement.classList.remove('greeting-font-loading'));
-Promise.all([coverFontsReady, greetingFontReady]).then(() => document.documentElement.classList.remove('fonts-loading'));
-const config = window.invitation;
+const coverFontsReady = scriptFontReady.then(() => document.documentElement.classList.remove('cover-font-loading'));
+const greetingFontReady = prepareFont('hand','25px "Daughter To Mom"',config.greeting).then(() => document.documentElement.classList.remove('greeting-font-loading'));
+Promise.all([orbitFontReady, coverFontsReady, greetingFontReady]).then(() => document.documentElement.classList.remove('fonts-loading'));
 document.querySelectorAll('.couple').forEach(el => el.textContent = config.names.join('  ·  '));
 document.querySelector('.greeting').textContent = config.greeting;
 document.querySelector('.venue-name').textContent = config.venue;
@@ -351,9 +351,3 @@ for (const [side, accounts] of Object.entries(config.accounts)) {
   list.append(row, holder, copy, status);
  }
 }
-
-// Keep native vertical scrolling and the gallery viewer, without page pinch zoom.
-for (const eventName of ['gesturestart', 'gesturechange']) {
- document.addEventListener(eventName, event => event.preventDefault(), {passive:false});
-}
-document.addEventListener('touchstart', event => { if (event.touches.length > 1) event.preventDefault(); }, {passive:false});

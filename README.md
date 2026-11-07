@@ -49,7 +49,7 @@
 - 사이트 안의 참석 입력 화면은 **미리보기**이며 실제로 전달되지 않습니다. `rsvpFields`에 적은 항목만 나오며, 외부 구글폼의 질문은 구글폼에서 별도로 설정해야 합니다.
 
 ## 폰트
-Orbit, Parisienne, 나눔손글씨(Daughter To Mom)는 `assets/fonts/`에 포함되어 있고, Noto Serif KR·Cormorant Garamond는 Google Fonts에서 불러옵니다. 각 폰트의 라이선스는 폰트 폴더의 `*-OFL.txt` 및 제공처 안내를 확인하세요.
+Orbit, Parisienne, Cormorant Garamond, 나눔손글씨(Daughter To Mom)는 로컬 폰트로 제공됩니다. 영문 타이틀 폰트는 HTML에 포함해 바로 읽고, 기본 초대글은 작은 글꼴 파일을 사용합니다. 다른 문구에 필요한 글자는 원본 폰트에서 불러옵니다. 각 폰트의 라이선스는 폰트 폴더의 `*-OFL.txt` 및 제공처 안내를 확인하세요.
 
 ## 사용 조건
 개인 청첩장 용도로 자유롭게 수정해 쓸 수 있습니다. 템플릿 자체의 재판매·유료 배포는 하지 마세요.
