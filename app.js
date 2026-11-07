@@ -133,15 +133,22 @@ loadConfiguredImage(portrait, config.portraitImage, () => invitationSection.clas
 const gallery = document.querySelector('.gallery-stack');
 const gallerySection = document.querySelector('.gallery-section');
 const galleryEntries = [];
+const requestedGalleryCount = config.galleryCount;
+const numericGalleryCount = Number(requestedGalleryCount);
+const galleryLimit = requestedGalleryCount == null || requestedGalleryCount === '' || !Number.isFinite(numericGalleryCount) || numericGalleryCount < 0
+ ? Infinity : Math.floor(numericGalleryCount);
 let galleryItems = [];
 function updateGallery() {
- galleryItems = galleryEntries.filter(item => item.loaded);
+ galleryItems = galleryEntries.filter(item => item.loaded).slice(0,galleryLimit);
+ gallery.replaceChildren(...galleryItems.map(item => item.button));
+ gallery.dataset.count = galleryItems.length;
+ gallery.classList.toggle('many-photos',galleryItems.length > 6);
  gallery.hidden = galleryItems.length === 0;
  gallerySection.classList.toggle('no-images', galleryItems.length === 0);
  galleryItems.forEach((item,index) => item.button.style.setProperty('--photo-order', index));
 }
 updateGallery();
-(Array.isArray(config.gallery) ? config.gallery : []).forEach(item => {
+(galleryLimit > 0 && Array.isArray(config.gallery) ? config.gallery : []).forEach(item => {
  if (!item || typeof item.src !== 'string' || !item.src.trim()) return;
  const entry = {src:item.src.trim(), caption:item.caption || '갤러리 사진', loaded:false};
  const button = document.createElement('button'); button.className = 'gallery-card'; button.type = 'button'; button.hidden = true;
@@ -246,12 +253,39 @@ function showAttendanceForm() {
 document.querySelector('.rsvp').addEventListener('click', showAttendanceForm);
 document.querySelector('.back-to-invitation').addEventListener('click', () => { showAttendanceIntro(); document.querySelector('.rsvp').focus(); });
 const responseForm = document.querySelector('.rsvp-form');
-responseForm.addEventListener('change', () => {
- const absent = responseForm.elements.attendance.value === 'no';
- document.querySelector('.attending-fields').hidden = absent;
- document.querySelector('.companion-fields').hidden = absent;
- for (const field of responseForm.querySelectorAll('.attending-fields input,.companion-fields input')) field.disabled = absent;
-});
+const fieldDefinitions = [
+ {name:'side', label:'하객 구분', aliases:['하객구분','어느측하객이신가요']},
+ {name:'attendance', label:'참석 여부', aliases:['참석여부']},
+ {name:'meal', label:'식사 여부', aliases:['식사여부'], attendingOnly:true},
+ {name:'bus', label:'전세버스 이용 여부', aliases:['전세버스이용여부','전세버스탑승여부','전세버스','버스'], attendingOnly:true},
+ {name:'guestName', label:'성함', aliases:['성함','이름']},
+ {name:'phone', label:'연락처', aliases:['연락처','전화번호']},
+ {name:'companions', label:'동행인 성함', aliases:['동행인성함','동행인이름'], attendingOnly:true},
+ {name:'companionCount', label:'동행인 수', aliases:['동행인수','동행인수(본인제외)'], attendingOnly:true}
+];
+const normalizeField = value => String(value).replace(/\s/g,'');
+const configuredFields = new Set((Array.isArray(config.rsvpFields) ? config.rsvpFields : fieldDefinitions.map(field=>field.label)).map(normalizeField));
+const enabledFields = fieldDefinitions.filter(field=>field.aliases.some(alias=>configuredFields.has(alias)));
+function updateRsvpFields() {
+ const hasAttendance = enabledFields.some(field=>field.name==='attendance');
+ const absent = hasAttendance && responseForm.elements.attendance.value === 'no';
+ for (const field of fieldDefinitions) {
+  const container = responseForm.querySelector(`[name="${field.name}"]`).closest('fieldset,.form-field');
+  container.dataset.rsvpField = field.name;
+  container.hidden = !enabledFields.includes(field) || (absent && field.attendingOnly);
+  for (const input of container.querySelectorAll('input')) input.disabled = container.hidden;
+ }
+ for (const selector of ['.attending-fields','.companion-fields']) {
+  const group = document.querySelector(selector);
+  group.hidden = [...group.children].every(field=>field.hidden);
+ }
+ document.querySelector('.submit-rsvp').disabled = enabledFields.length===0;
+ document.querySelector('.form-preview-note').textContent = enabledFields.length
+  ? '입력 화면 미리보기 · 아직 응답이 전달되지 않습니다.'
+  : '아직 입력 항목이 설정되지 않았습니다.';
+}
+updateRsvpFields();
+responseForm.addEventListener('change', updateRsvpFields);
 responseForm.addEventListener('submit', event => {
  event.preventDefault();
  const status = document.querySelector('.rsvp-status');
@@ -263,10 +297,10 @@ responseForm.addEventListener('submit', event => {
 if ('IntersectionObserver' in window) {
  document.documentElement.classList.add('js-ready');
  const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-  if (entry.intersectionRatio >= .18 && !entry.target.classList.contains('in-view')) {
+  if ((entry.intersectionRatio >= .18 || (entry.target === gallerySection && entry.intersectionRatio > 0)) && !entry.target.classList.contains('in-view')) {
    entry.target.classList.add('in-view');
    if (entry.target.id === 'invitation') typeGreeting();
-  } else if (entry.intersectionRatio <= .01) {
+  } else if (entry.intersectionRatio <= .01 && !(entry.target === gallerySection && entry.intersectionRatio > 0)) {
    entry.target.classList.remove('in-view');
    if (entry.target.id === 'invitation') finishGreeting();
   }

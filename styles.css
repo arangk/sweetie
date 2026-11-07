@@ -50,3 +50,7 @@ body{touch-action:pan-y}button,a,summary{touch-action:manipulation}img{-webkit-u
 .invitation.no-portrait .signature,.invitation.no-portrait .signature small{color:var(--ink);text-shadow:none}
 .invitation.no-portrait .greeting{text-shadow:none}
 .gallery-section.no-images{min-height:0;padding-bottom:40px}
+/* 사진 개수가 늘어나면 전체가 겹쳐지지 않도록 콜라주를 아래로 확장합니다. */
+.gallery-stack[data-count="1"] .gallery-card{left:50%;right:auto;top:0;width:min(83%,calc(var(--gallery-height)*.6));translate:-50% 0;--angle:-3deg}
+.gallery-stack[data-count="2"] .gallery-card:nth-child(2){top:22%}
+.gallery-stack.many-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:0;height:auto;padding:12px 8px 25px;margin-bottom:10px}.gallery-stack.many-photos .gallery-card:nth-child(n){position:relative;left:auto;right:auto;top:auto;width:112%;height:auto;margin:0 0 15px;translate:none;--angle:-5deg}.gallery-stack.many-photos .gallery-card:nth-child(even){margin-top:40px;margin-left:-12%;--angle:5deg}.gallery-stack.many-photos .gallery-card:nth-child(3n){--angle:-3deg}.submit-rsvp:disabled{opacity:.5;cursor:default}
