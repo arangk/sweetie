@@ -358,7 +358,8 @@ function movePage(direction) {
 function inDialog(event) { return event.target.closest('dialog') || document.querySelector('dialog[open]'); }
 function canScrollPage(direction) {
  const page = pages[pageIndex];
- return direction > 0 ? page.scrollTop + page.clientHeight < page.scrollHeight - 2 : page.scrollTop > 2;
+ if (page === cover || page.id === 'invitation') return false;
+ return direction > 0 ? page.scrollTop + page.clientHeight < page.scrollHeight - 4 : page.scrollTop > 4;
 }
 window.addEventListener('wheel', event => {
  if (inDialog(event) || event.ctrlKey || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
@@ -372,26 +373,41 @@ window.addEventListener('wheel', event => {
  wheelGesture = true;
  movePage(direction);
 }, {passive:false});
-let touchStartY = null, touchStartX = 0, touchDirection = 0, nativeTouch = false;
-window.addEventListener('touchstart', event => {
- if (inDialog(event) || event.touches.length !== 1) { touchStartY = null; return; }
- touchStartY = event.touches[0].clientY;
- touchStartX = event.touches[0].clientX;
- touchDirection = 0; nativeTouch = false;
-}, {passive:true});
-window.addEventListener('touchmove', event => {
- if (touchStartY === null) return;
- const delta = touchStartY - event.touches[0].clientY;
- if (Math.abs(delta) < 8 || Math.abs(delta) < Math.abs(touchStartX - event.touches[0].clientX)) return;
- touchDirection = Math.sign(delta);
- if (!moving && canScrollPage(touchDirection)) { nativeTouch = true; return; }
- event.preventDefault();
-}, {passive:false});
-window.addEventListener('touchcancel', () => { touchStartY = null; }, {passive:true});
-window.addEventListener('touchend', event => {
- if (touchStartY !== null && !nativeTouch && !moving && Math.abs(touchStartY - event.changedTouches[0].clientY) > 35) movePage(touchDirection);
- touchStartY = null;
-}, {passive:true});
+// 터치 제스처를 브라우저의 기본 세로 패닝과 동시에 처리하지 않습니다.
+// CSS touch-action과 Pointer Events를 함께 사용하여 손가락을 떼는 이벤트까지 받습니다.
+let swipe = null;
+pageHost.addEventListener('pointerdown', event => {
+ if (event.pointerType === 'mouse' || inDialog(event)) return;
+ if (!event.isPrimary) { swipe = null; return; }
+ swipe = {
+  id: event.pointerId, x: event.clientX, y: event.clientY,
+  scrollTop: pages[pageIndex].scrollTop, page: pages[pageIndex],
+  mode: null, blocked: moving
+ };
+});
+pageHost.addEventListener('pointermove', event => {
+ if (!swipe || swipe.id !== event.pointerId || swipe.blocked) return;
+ const dy = swipe.y - event.clientY;
+ const dx = swipe.x - event.clientX;
+ if (!swipe.mode) {
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+  if (Math.abs(dx) > Math.abs(dy)) { swipe.mode = 'horizontal'; return; }
+  swipe.mode = canScrollPage(Math.sign(dy)) ? 'content' : 'page';
+  pageHost.setPointerCapture(event.pointerId);
+ }
+ if (swipe.mode === 'content') swipe.page.scrollTop = swipe.scrollTop + dy;
+});
+pageHost.addEventListener('pointerup', event => {
+ if (!swipe || swipe.id !== event.pointerId) return;
+ const gesture = swipe; swipe = null;
+ const dy = gesture.y - event.clientY;
+ const dx = gesture.x - event.clientX;
+ if (!gesture.blocked && gesture.mode !== 'content' && Math.abs(dy) >= 35 && Math.abs(dy) > Math.abs(dx)) movePage(Math.sign(dy));
+});
+pageHost.addEventListener('pointercancel', () => { swipe = null; });
+pageHost.addEventListener('lostpointercapture', event => {
+ if (event.target === pageHost && swipe?.id === event.pointerId) swipe = null;
+});
 window.addEventListener('keydown', event => {
  if (inDialog(event) || event.target.closest('input,textarea,select,button,a,summary,[contenteditable]')) return;
  const direction = ['ArrowDown','PageDown',' '].includes(event.key) ? 1 : ['ArrowUp','PageUp'].includes(event.key) ? -1 : 0;

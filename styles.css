@@ -64,9 +64,9 @@ html{scroll-snap-type:y proximity;scroll-behavior:auto}.section.in-view .reveal{
 @font-face{font-family:"Daughter To Mom";src:url("assets/fonts/NanumDaughterToMom.woff2") format("woff2");font-display:block;font-weight:400}
 /* 화면 이동은 하나의 트랙만 담당하고, 등장 효과는 도착한 뒤 시작합니다. */
 html.paged,html.paged body{height:100%;overflow:hidden;scroll-snap-type:none;overscroll-behavior:none}
-.paged main{height:100dvh;overflow:hidden;position:relative}
+.paged main{height:100dvh;overflow:hidden;position:relative;touch-action:none}
 .page-track{height:100%;transition:transform .48s cubic-bezier(.22,.75,.25,1);will-change:transform}
-.page-track>section{height:100%;min-height:100%;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-snap-align:none;scrollbar-width:none;position:relative}
+.page-track>section{touch-action:none;height:100%;min-height:100%;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-snap-align:none;scrollbar-width:none;position:relative}
 .page-track>section::-webkit-scrollbar{display:none}
 .page-track>.invitation{overflow:hidden}
 .section.in-view .reveal{transition-duration:.5s;transition-delay:calc(var(--reveal-order,0)*.09s)}
