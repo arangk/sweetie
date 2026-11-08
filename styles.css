@@ -72,3 +72,6 @@ html.paged,html.paged body{height:100%;overflow:hidden;scroll-snap-type:none;ove
 .section.in-view .reveal{transition-duration:.5s;transition-delay:calc(var(--reveal-order,0)*.09s)}
 .gallery-section.in-view .gallery-card{animation-duration:.55s;animation-delay:calc(.12s + var(--photo-order)*.09s)}
 @media(prefers-reduced-motion:reduce){.page-track{transition:none}}
+
+.music-toggle{position:fixed;z-index:20;bottom:max(12px,env(safe-area-inset-bottom));right:max(12px,calc((100vw - 430px)/2 + 12px));display:flex;align-items:center;justify-content:center;gap:5px;min-width:44px;min-height:44px;border:1px solid #71516a33;border-radius:50%;background:#f8f6f0eb;color:var(--plum);box-shadow:0 2px 9px #47333b12;touch-action:manipulation}
+.music-toggle>span:first-child{font:22px Georgia,serif}.music-state{font:8px Arial,sans-serif;letter-spacing:.3px}.music-toggle[aria-pressed=true]{background:#eee4e9}

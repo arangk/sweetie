@@ -420,3 +420,45 @@ window.addEventListener('resize', () => {
  requestAnimationFrame(() => requestAnimationFrame(() => { pageTrack.style.transition = ''; }));
 });
 activatePage();
+
+// 첫 사용자 입력에서만 자동 재생을 시도합니다. 브라우저가 막으면 버튼으로 재시도합니다.
+const musicToggle = document.querySelector('.music-toggle');
+if (typeof config.backgroundMusic === 'string' && config.backgroundMusic.trim()) {
+ const music = new Audio();
+ music.preload = 'none';
+ music.loop = true;
+ music.volume = .35;
+ music.src = config.backgroundMusic.trim();
+ musicToggle.hidden = false;
+ const syncMusicButton = () => {
+  const playing = !music.paused;
+  musicToggle.setAttribute('aria-pressed', String(playing));
+  musicToggle.setAttribute('aria-label', playing ? '배경음악 끄기' : '배경음악 켜기');
+  musicToggle.querySelector('.music-state').textContent = playing ? 'ON' : 'OFF';
+ };
+ async function playMusic() {
+  try { await music.play(); } catch { /* 자동 재생 제한 시 버튼을 통해 다시 켤 수 있습니다. */ }
+  syncMusicButton();
+ }
+ music.addEventListener('play', syncMusicButton);
+ music.addEventListener('pause', syncMusicButton);
+ music.addEventListener('error', () => {
+  musicToggle.hidden = true;
+  stopFirstInteraction();
+ });
+ function stopFirstInteraction() {
+  document.removeEventListener('touchend', firstMusicInteraction, true);
+  document.removeEventListener('click', firstMusicInteraction, true);
+ }
+ function firstMusicInteraction(event) {
+  if (event.target.closest('.music-toggle')) return;
+  stopFirstInteraction();
+  playMusic();
+ }
+ document.addEventListener('touchend', firstMusicInteraction, {capture:true, passive:true});
+ document.addEventListener('click', firstMusicInteraction, {capture:true, passive:true});
+ musicToggle.addEventListener('click', () => {
+  stopFirstInteraction();
+  if (music.paused) playMusic(); else music.pause();
+ });
+}
